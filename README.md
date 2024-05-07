@@ -25,7 +25,7 @@ Follow these instructions to set up and run the XC-Cup Ranker locally.
 ### Prerequisites
 
 - Python 3.6 or higher
-- Install required packages using `pip install -r requirements.txt`
+- Required packages (see `requirements.txt`)
 
 ### Usage
 
@@ -36,7 +36,21 @@ git clone https://github.com/ruben-hutter/xc-cup-ranker.git
 cd xc-cup-ranker
 ```
 
-2. Run the script:
+2. Install the required packages:
+
+    a) Using pip:
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+    b) Using conda:
+
+    ```bash
+    conda create -n xc-cup-ranker --file package-list.txt
+    ```
+
+3. Run the script:
 
 ```bash
 python xc_cup_ranker.py --participants participants.csv --events events.csv --event <event_id>
