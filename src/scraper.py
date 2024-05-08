@@ -19,7 +19,6 @@ def get_flights(date, take_off_site):
         for i in range(0, max_list_id+100, 100):
             print(f'Processing first {i} flights...')
             if i != 0:
-                # skip reloading the first page
                 url = f'{base_url}@flights[start]={i}'
                 driver.get(url)
                 time.sleep(2) # TODO: refactor without sleep
@@ -46,18 +45,29 @@ def save_relevant_flights(flight, take_off_site, ranked_flights, rank):
     take_off_time = cells[1].text.splitlines()[0]
     pilot_name = cells[2].text
     launch_site = cells[3].text.splitlines()[1]
-    # TODO: get route_type from cells[4]
+    route_type = (
+        cells[4]
+        .find_element(By.CSS_SELECTOR, 'div:nth-child(1)')
+        .get_attribute('title')
+    )
     distance = cells[5].text.split()[0]
     points = cells[6].text.split()[0]
     avg_speed = cells[7].text
-    # TODO: get glider from cells[8]
+    glider = (
+        cells[8]
+        .find_element(By.CSS_SELECTOR, 'div:nth-child(1)')
+        .get_attribute('title')
+    )
+    print(glider)
     if launch_site == take_off_site and pilot_name not in ranked_flights:
         ranked_flights[pilot_name] = {
             'rank': rank,
             'take_off_time': take_off_time,
+            'route_type': route_type,
             'distance': distance,
             'points': points,
-            'avg_speed': avg_speed
+            'avg_speed': avg_speed,
+            'glider': glider
         }
         return rank + 1
     return rank
@@ -73,12 +83,12 @@ def get_max_list_id(wait):
     return int(href_value.split('=')[-1])
 
 
-def export_flights(flights):
+def export_flights(flights, date, take_off_site):
     print('Exporting flights to CSV...')
-    with open('../output/flights.csv', 'w') as f:
-        f.write('Rank,Take off time,Pilot name,Take off site,Distance (km),Points,Avg speed (km/h)\n')
+    with open(f'../output/{date}_{take_off_site}.csv', 'w') as f:
+        f.write('Rank,Take off time,Pilot name,Take off site,Distance (km),Route Type,Points,Avg speed (km/h),Glider\n')
         for pilot_name, flight in flights.items():
-            f.write(f"{flight['rank']},{flight['take_off_time']},{pilot_name},{flight['distance']},{flight['points']},{flight['avg_speed']}\n")
+            f.write(f"{flight['rank']},{flight['take_off_time']},{pilot_name},{flight['distance']},{flight['route_type']},{flight['points']},{flight['avg_speed']},{flight['glider']}\n")
     print('Export complete!')
 
 
@@ -90,7 +100,9 @@ def main():
     take_off_site = sys.argv[2]
 
     flights = get_flights(date, take_off_site)
-    export_flights(flights)
+    # TODO: compare pilots with competing pilots
+    export_flights(flights, date, take_off_site)
+    # TODO: create nice pdf with the data
 
 
 if __name__ == '__main__':
