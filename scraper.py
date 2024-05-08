@@ -1,4 +1,5 @@
 import sys
+import csv
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -17,7 +18,7 @@ def get_flights(date, take_off_site):
         max_list_id = get_max_list_id(wait)
         count = 1
         for i in range(0, max_list_id+100, 100):
-            print(f'Processing first {i} flights...')
+            print(f'Processing first flights {i+1}-{i+100}...')
             if i != 0:
                 url = f'{base_url}@flights[start]={i}'
                 driver.get(url)
@@ -58,7 +59,8 @@ def save_relevant_flights(flight, take_off_site, ranked_flights, rank):
         .find_element(By.CSS_SELECTOR, 'div:nth-child(1)')
         .get_attribute('title')
     )
-    print(glider)
+    if pilot_name in ranked_flights:
+        print(f'Pilot {pilot_name} already ranked')
     if launch_site == take_off_site and pilot_name not in ranked_flights:
         ranked_flights[pilot_name] = {
             'rank': rank,
@@ -85,19 +87,35 @@ def get_max_list_id(wait):
 
 def export_flights(flights, date, take_off_site):
     print('Exporting flights to CSV...')
-    with open(f'../output/{date}_{take_off_site}.csv', 'w') as f:
+    with open(f'output/{date}_{take_off_site}.csv', 'w') as f:
         f.write('Rank,Take off time,Pilot name,Take off site,Distance (km),Route Type,Points,Avg speed (km/h),Glider\n')
         for pilot_name, flight in flights.items():
             f.write(f"{flight['rank']},{flight['take_off_time']},{pilot_name},{flight['distance']},{flight['route_type']},{flight['points']},{flight['avg_speed']},{flight['glider']}\n")
     print('Export complete!')
 
 
+def get_date_and_take_off_site(event_id):
+    # event_id in csv are integers from 1 to n
+    event_id = int(event_id)
+    with open('data/events.csv', newline='') as f:
+        reader = csv.reader(f)
+        next(reader)
+        for i, row in enumerate(reader):
+            if i == event_id - 1:
+                print(f'Event found: {row[1]}, {row[2]}')
+                return row[1], row[2]
+    return None, None
+
+
 def main():
-    if len(sys.argv) != 3:
-        print('Usage: python scraper.py <date> <take-off site>')
+    if len(sys.argv) != 2:
+        print('Usage: python scraper.py <event_id>')
         sys.exit(1)
-    date = sys.argv[1]
-    take_off_site = sys.argv[2]
+    event_id = sys.argv[1]
+    date, take_off_site = get_date_and_take_off_site(event_id)
+    if date is None or take_off_site is None:
+        print('Event not found')
+        sys.exit(1)
 
     flights = get_flights(date, take_off_site)
     # TODO: compare pilots with competing pilots
