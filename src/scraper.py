@@ -6,9 +6,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 import time
 
-
 def get_flights(date, take_off_site):
-    date = '2024-04-06' # TODO: just for testing
+    ranked_flights = {}
     base_url = f'https://www.xcontest.org/switzerland/en/flights/daily-score-pg/#filter[date]={date}@filter[country]=CH@filter[detail_glider_catg]=FAI3'
     driver = webdriver.Firefox()
     wait = WebDriverWait(driver, 10)
@@ -16,7 +15,9 @@ def get_flights(date, take_off_site):
     try:
         driver.get(base_url)
         max_list_id = get_max_list_id(wait)
+        count = 1
         for i in range(0, max_list_id+100, 100):
+            print(f'Processing first {i} flights...')
             if i != 0:
                 # skip reloading the first page
                 url = f'{base_url}@flights[start]={i}'
@@ -28,13 +29,38 @@ def get_flights(date, take_off_site):
             flights_table_body = flights_table.find_element(By.TAG_NAME, 'tbody')
             flights = flights_table_body.find_elements(By.TAG_NAME, 'tr')
             for flight in flights:
-                print(flight.find_element(By.XPATH, 'td[3]').text)
+                count = save_relevant_flights(flight, take_off_site, ranked_flights, count)
+        return ranked_flights
+
     except TimeoutException as e:
         print('TimeoutException:', e)
         driver.quit()
         sys.exit(1)
 
-    driver.quit()
+    finally:
+        driver.quit()
+
+
+def save_relevant_flights(flight, take_off_site, ranked_flights, rank):
+    cells = flight.find_elements(By.TAG_NAME, 'td')
+    take_off_time = cells[1].text
+    pilot_name = cells[2].text
+    launch_site = cells[3].text.splitlines()[1]
+    # TODO: get route_type from cells[4]
+    distance = cells[5].text
+    points = cells[6].text
+    avg_speed = cells[7].text
+    # TODO: get glider from cells[8]
+    if launch_site == take_off_site and pilot_name not in ranked_flights:
+        ranked_flights[pilot_name] = {
+            'rank': rank,
+            'take_off_time': take_off_time,
+            'distance': distance,
+            'points': points,
+            'avg_speed': avg_speed
+        }
+        return rank + 1
+    return rank
 
 
 def get_max_list_id(wait):
@@ -47,6 +73,15 @@ def get_max_list_id(wait):
     return int(href_value.split('=')[-1])
 
 
+def export_flights(flights):
+    print('Exporting flights to CSV...')
+    with open('../output/flights.csv', 'w') as f:
+        f.write('Rank,Take off time,Pilot name,Take off site,Distance,Points,Avg speed\n')
+        for pilot_name, flight in flights.items():
+            f.write(f"{flight['rank']},{flight['take_off_time']},{pilot_name},{flight['distance']},{flight['points']},{flight['avg_speed']}\n")
+    print('Export complete!')
+
+
 def main():
     if len(sys.argv) != 3:
         print('Usage: python scraper.py <date> <take-off site>')
@@ -54,7 +89,8 @@ def main():
     date = sys.argv[1]
     take_off_site = sys.argv[2]
 
-    get_flights(date, take_off_site)
+    flights = get_flights(date, take_off_site)
+    export_flights(flights)
 
 
 if __name__ == '__main__':
