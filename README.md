@@ -53,7 +53,7 @@ cd xc-cup-ranker
 3. Run the script:
 
 ```bash
-python xc_cup_ranker.py --participants participants.csv --events events.csv --event <event_id>
+python scraper.py <event_id>
 ```
 
 Replace `<event_id>` with the ID of the event you want to rank.
