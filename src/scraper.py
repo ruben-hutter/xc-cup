@@ -43,12 +43,12 @@ def get_flights(date, take_off_site):
 
 def save_relevant_flights(flight, take_off_site, ranked_flights, rank):
     cells = flight.find_elements(By.TAG_NAME, 'td')
-    take_off_time = cells[1].text
+    take_off_time = cells[1].text.splitlines()[0]
     pilot_name = cells[2].text
     launch_site = cells[3].text.splitlines()[1]
     # TODO: get route_type from cells[4]
-    distance = cells[5].text
-    points = cells[6].text
+    distance = cells[5].text.split()[0]
+    points = cells[6].text.split()[0]
     avg_speed = cells[7].text
     # TODO: get glider from cells[8]
     if launch_site == take_off_site and pilot_name not in ranked_flights:
@@ -76,7 +76,7 @@ def get_max_list_id(wait):
 def export_flights(flights):
     print('Exporting flights to CSV...')
     with open('../output/flights.csv', 'w') as f:
-        f.write('Rank,Take off time,Pilot name,Take off site,Distance,Points,Avg speed\n')
+        f.write('Rank,Take off time,Pilot name,Take off site,Distance (km),Points,Avg speed (km/h)\n')
         for pilot_name, flight in flights.items():
             f.write(f"{flight['rank']},{flight['take_off_time']},{pilot_name},{flight['distance']},{flight['points']},{flight['avg_speed']}\n")
     print('Export complete!')
