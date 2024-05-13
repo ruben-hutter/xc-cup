@@ -38,25 +38,39 @@ cd xc-cup-ranker
 
 2. Install the required packages:
 
-    a) Using pip:
+    a) Using conda:
+
+    ```bash
+    conda create -n xc-cup-env --file package-list.txt
+    ```
+
+    b) Using pip:
 
     ```bash
     pip install -r requirements.txt
     ```
 
-    b) Using conda:
-
-    ```bash
-    conda create -n xc-cup-ranker --file package-list.txt
-    ```
-
 3. Run the script:
 
-```bash
-python scraper.py <event_id>
-```
+    a) Run `run.sh`:
+
+    ```bash
+    ./run.sh <event_id> [--year <year>]
+    ```
+
+    b) With conda:
+    ```bash
+    conda run -n xc-cup-env python xc-cup-ranker.py <event_id> [--year <year>]
+    ```
+
+    c) Without conda:
+    ```bash
+    python scraper.py <event_id> [--year <year>]
+    ```
 
 Replace `<event_id>` with the ID of the event you want to rank.
+Optionally, you can specify the year of the event as well, e.g. `2021`. The
+default year is the current year.
 
 ## Contributing
 

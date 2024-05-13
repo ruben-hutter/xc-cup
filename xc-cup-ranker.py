@@ -1,6 +1,9 @@
+import os
 import csv
 import sys
 import time
+import datetime
+import argparse
 
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
@@ -8,6 +11,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+year = datetime.datetime.now().year
 
 def get_flights(date, take_off_site, event_id):
     ranked_flights = {}
@@ -61,9 +65,6 @@ def save_relevant_flights(flight, take_off_site, ranked_flights, rank, event_id)
         .find_element(By.CSS_SELECTOR, 'div:nth-child(1)')
         .get_attribute('title')
     )
-    # TODO: Just for testing, remove later
-    if pilot_name in ranked_flights:
-        print(f'Pilot {pilot_name} already ranked')
     if (
             launch_site == take_off_site
             and pilot_name not in ranked_flights
@@ -82,8 +83,7 @@ def save_relevant_flights(flight, take_off_site, ranked_flights, rank, event_id)
     return rank
 
 
-# TODO: get year in main
-def pilot_is_competing(event_id, pilot_name, year=2024):
+def pilot_is_competing(event_id, pilot_name):
     # TODO: maybe change to txt file
     with open(f'data/{year}/participants/{event_id}.csv', newline='') as f:
         reader = csv.reader(f)
@@ -106,16 +106,22 @@ def get_max_list_id(wait):
 
 def export_flights(flights, date, take_off_site):
     print('Exporting flights to CSV...')
-    with open(f'output/{date}_{take_off_site}.csv', 'w') as f:
+    # create output folder if it doesn't exist
+    try:
+        os.makedirs(f'output/{year}')
+    except FileExistsError:
+        pass
+
+    with open(f'output/{year}/{date}_{take_off_site}.csv', 'w') as f:
         f.write('Rank,Take off time,Pilot name,Take off site,Distance (km),Route Type,Points,Avg speed (km/h),Glider\n')
         for pilot_name, flight in flights.items():
             f.write(
-                f"{flight['rank']},{flight['take_off_time']},{pilot_name},{flight['distance']},{flight['route_type']},{flight['points']},{flight['avg_speed']},{flight['glider']}\n")
+                f"{flight['rank']},{flight['take_off_time']},{pilot_name},{flight['distance']},{flight['route_type']},{flight['points']},{flight['avg_speed']},{flight['glider']}\n"
+            )
     print('Export complete!')
 
 
-# TODO: get year in main
-def get_date_and_take_off_site(event_id, year=2024):
+def get_date_and_take_off_site(event_id):
     # event_id in csv are integers from 1 to n
     event_id = int(event_id)
     with open(f'data/{year}/events.csv', newline='') as f:
@@ -129,17 +135,30 @@ def get_date_and_take_off_site(event_id, year=2024):
 
 
 def main():
-    if len(sys.argv) != 2:
+    '''
+    if len(sys.argv) <= 2:
         print('Usage: python scraper.py <event_id>')
         sys.exit(1)
     event_id = sys.argv[1]
+    if sys.argv[2]:
+        global year
+        year = sys.argv[2]
+    '''
+    parser = argparse.ArgumentParser(description='Scrape XContest for flights')
+    parser.add_argument('event_id', type=int, help='Event ID')
+    parser.add_argument('--year', type=int, help='Year')
+    args = parser.parse_args()
+    event_id = args.event_id
+    if args.year:
+        global year
+        year = args.year
+
     date, take_off_site = get_date_and_take_off_site(event_id)
     if date is None or take_off_site is None:
         print('Event not found')
         sys.exit(1)
 
     flights = get_flights(date, take_off_site, event_id)
-    # TODO: compare pilots with competing pilots
     export_flights(flights, date, take_off_site)
     # TODO: create nice pdf with the data
 
