@@ -135,15 +135,6 @@ def get_date_and_take_off_site(event_id):
 
 
 def main():
-    '''
-    if len(sys.argv) <= 2:
-        print('Usage: python scraper.py <event_id>')
-        sys.exit(1)
-    event_id = sys.argv[1]
-    if sys.argv[2]:
-        global year
-        year = sys.argv[2]
-    '''
     parser = argparse.ArgumentParser(description='Scrape XContest for flights')
     parser.add_argument('event_id', type=int, help='Event ID')
     parser.add_argument('--year', type=int, help='Year')
