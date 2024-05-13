@@ -82,8 +82,6 @@ Contributions are welcome! Follow these steps to contribute to the project:
 4. Push the branch (`git push origin feature-branch`).
 5. Create a new pull request.
 
-Please refer to the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
