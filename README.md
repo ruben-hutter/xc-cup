@@ -87,10 +87,3 @@ Please refer to the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgements
-
-- This project was inspired by the need to automate XC-Cup rankings.
-- Special thanks to the contributors and maintainers of XContest for providing
-access to flight data.
-
