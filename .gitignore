@@ -177,3 +177,4 @@ pyrightconfig.json
 
 # Additional ignores
 output/
+xc-cup-env/
