@@ -8,34 +8,46 @@ import argparse
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 year = datetime.datetime.now().year
+timeout = 10
 
 def get_flights(date, take_off_site, event_id):
     ranked_flights = {}
     base_url = f'https://www.xcontest.org/switzerland/en/flights/daily-score-pg/#filter[date]={date}@filter[country]=CH@filter[detail_glider_catg]=FAI3'
     driver = webdriver.Firefox()
-    wait = WebDriverWait(driver, 10)
 
     try:
         driver.get(base_url)
-        max_list_id = get_max_list_id(wait)
+        max_list_id = get_max_list_id(driver)
         count = 1
+        prev_flights_table_id = ''
         for i in range(0, max_list_id + 100, 100):
             print(f'Processing first flights {i + 1}-{i + 100}...')
             if i != 0:
                 url = f'{base_url}@flights[start]={i}'
                 driver.get(url)
-                time.sleep(2)  # TODO: refactor without sleep
-            flights_table = wait.until(
-                EC.visibility_of_element_located((By.CLASS_NAME, 'XClist'))
+            while True:
+                flights_table = WebDriverWait(driver, timeout).until(
+                    lambda d: d.find_element(By.CLASS_NAME, 'XClist'),
+                    message='flights_table not found'
+                )
+                if flights_table.id != prev_flights_table_id:
+                    break
+                time.sleep(0.2)
+            flights_table_body = WebDriverWait(flights_table, timeout).until(
+                lambda t: t.find_element(By.TAG_NAME, 'tbody'),
+                'flights_table_body not found'
             )
-            flights_table_body = flights_table.find_element(By.TAG_NAME, 'tbody')
-            flights = flights_table_body.find_elements(By.TAG_NAME, 'tr')
+            flights = WebDriverWait(flights_table_body, timeout).until(
+                lambda t: t.find_elements(By.TAG_NAME, 'tr'),
+                'flights not found'
+            )
             for flight in flights:
                 count = save_relevant_flights(flight, take_off_site, ranked_flights, count, event_id)
+
+            prev_flights_table_id = flights_table.id
         return ranked_flights
 
     except TimeoutException as e:
@@ -48,7 +60,10 @@ def get_flights(date, take_off_site, event_id):
 
 
 def save_relevant_flights(flight, take_off_site, ranked_flights, rank, event_id):
-    cells = flight.find_elements(By.TAG_NAME, 'td')
+    cells = WebDriverWait(flight, timeout).until(
+        lambda f: f.find_elements(By.TAG_NAME, 'td'),
+        'cells not found'
+    )
     take_off_time = cells[1].text.splitlines()[0]
     pilot_name = cells[2].text
     launch_site = cells[3].text.splitlines()[1]
@@ -94,13 +109,16 @@ def pilot_is_competing(event_id, pilot_name):
     return False
 
 
-def get_max_list_id(wait):
-    xc_pager = wait.until(
-        EC.presence_of_element_located((By.CLASS_NAME, 'XCpager'))
+def get_max_list_id(driver):
+    xc_pager = WebDriverWait(driver, timeout).until(
+        lambda d: d.find_element(By.CLASS_NAME, 'XCpager'),
+        'XCpager not found'
     )
     pager_links = xc_pager.find_elements(By.TAG_NAME, 'a')
     last_link = pager_links[-1]
     href_value = last_link.get_attribute('href')
+    if href_value is None:
+        return 0
     return int(href_value.split('=')[-1])
 
 
