@@ -4,12 +4,12 @@
 # else try to run with system python3
 if command -v conda &> /dev/null; then
     if conda env list | grep -q "xc-cup-env"; then
-        conda run -n xc-cup-env python xc-cup-ranker.py $@
+        conda run -n xc-cup-env python xc_cup_ranker.py $@
     fi
 elif [ -d "xc-cup-env" ]; then
     source xc-cup-env/bin/activate
-    python xc-cup-ranker.py $@
+    python xc_cup_ranker.py $@
     deactivate
 else
-    python3 xc-cup-ranker.py $@
+    python3 xc_cup_ranker.py $@
 fi
