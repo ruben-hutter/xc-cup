@@ -1,6 +1,8 @@
 import pytest
 from unittest import mock
 
+from xc_cup_ranker import get_data_and_take_off_site
+
 
 def test_get_data_and_take_off_site_valid():
     event_id = 1
