@@ -24,7 +24,7 @@ Follow these instructions to set up and run the XC-Cup Ranker locally.
 
 ### Prerequisites
 
-- Python 3.6 or higher
+- Python 3.10 or higher
 - Required packages (see `requirements.txt`)
 
 ### Usage
@@ -60,16 +60,16 @@ cd xc-cup-ranker
 
     b) With conda:
     ```bash
-    conda run -n xc-cup-env python xc-cup-ranker.py <event_id> [--year <year>]
+    conda run -n xc-cup-env python xc_cup_ranker.py <event_id> [--year <year>]
     ```
 
     c) Without conda:
     ```bash
-    python scraper.py <event_id> [--year <year>]
+    python xc_cup_ranker.py <event_id> [--year <year>]
     ```
 
 Replace `<event_id>` with the ID of the event you want to rank.
-Optionally, you can specify the year of the event as well, e.g. `2021`. The
+Optionally, you can specify the year of the event as well, e.g. `2024`. The
 default year is the current year.
 
 ## Contributing
