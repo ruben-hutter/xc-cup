@@ -152,11 +152,16 @@ def get_date_and_take_off_site(event_id):
     return None, None
 
 
-def main():
+def args_parser():
     parser = argparse.ArgumentParser(description='Scrape XContest for flights')
     parser.add_argument('event_id', type=int, help='Event ID')
     parser.add_argument('--year', type=int, help='Year')
     args = parser.parse_args()
+    return args
+
+
+def main():
+    args = args_parser()
     event_id = args.event_id
     if args.year:
         global year
