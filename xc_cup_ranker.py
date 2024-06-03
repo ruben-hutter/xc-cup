@@ -20,6 +20,7 @@ timeout = 10
 
 def get_flights():
     ranked_flights = {}
+    global participants
     participants = get_participants()
     base_url = f'https://www.xcontest.org/switzerland/en/flights/daily-score-pg/#filter[date]={date}@filter[country]=CH@filter[detail_glider_catg]=FAI3'
     driver = webdriver.Firefox()
@@ -36,7 +37,7 @@ def get_flights():
                 driver.get(url)
             flights, flights_table_id = _get_flights(driver, prev_flights_table_id)
             for flight in flights:
-                count = save_relevant_flights(flight, take_off_site, ranked_flights, count, participants)
+                count = save_relevant_flights(flight, ranked_flights, count)
 
             prev_flights_table_id = flights_table_id
         return ranked_flights
@@ -70,7 +71,7 @@ def _get_flights(driver, prev_flights_table_id):
     return flights, flights_table.id
 
 
-def save_relevant_flights(flight, take_off_site, ranked_flights, rank, participants):
+def save_relevant_flights(flight, ranked_flights, rank):
     cells = WebDriverWait(flight, timeout).until(
         lambda f: f.find_elements(By.TAG_NAME, 'td'),
         'cells not found'
