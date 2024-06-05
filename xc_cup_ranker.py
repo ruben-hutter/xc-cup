@@ -4,11 +4,19 @@ import sys
 import time
 import datetime
 import argparse
+import logging
 
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
+
+TIMEOUT = 10
+OUTPUT_DIR = 'output'
+DATA_DIR = 'data'
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 year = datetime.datetime.now().year
 event_id = 0
@@ -16,13 +24,18 @@ date = ''
 take_off_site = ''
 participants = None
 
-timeout = 10
-
 def get_flights():
-    ranked_flights = {}
+    '''
+    Fetches flights from XContest and returns a dictionary of relevant flights
+    '''
     global participants
     participants = get_participants()
-    base_url = f'https://www.xcontest.org/switzerland/en/flights/daily-score-pg/#filter[date]={date}@filter[country]=CH@filter[detail_glider_catg]=FAI3'
+    #base_url = f'https://www.xcontest.org/switzerland/en/flights/daily-score-pg/#filter[date]={date}@filter[country]=CH@filter[detail_glider_catg]=FAI3'
+    base_url = (
+        f'https://www.xcontest.org/switzerland/en/flights/daily-score-pg/'
+        f'#filter[date]={date}@filter[country]=CH@filter[detail_glider_catg]=FAI3'
+    )
+
     driver = webdriver.Firefox()
 
     try:
@@ -30,8 +43,10 @@ def get_flights():
         max_list_id = get_max_list_id(driver)
         count = 1
         prev_flights_table_id = ''
+        ranked_flights = {}
+
         for i in range(0, max_list_id + 100, 100):
-            print(f'Processing first flights {i + 1}-{i + 100}...')
+            logger.info(f'Processing first flights {i + 1}-{i + 100}...')
             if i != 0:
                 url = f'{base_url}@flights[start]={i}'
                 driver.get(url)
@@ -40,11 +55,13 @@ def get_flights():
                 count = save_relevant_flights(flight, ranked_flights, count)
 
             prev_flights_table_id = flights_table_id
+
         return ranked_flights
 
     except TimeoutException as e:
-        print('TimeoutException:', e)
-        driver.quit()
+        # TODO: check which logger is better
+        logger.error('TimeoutException:', exc_info=True)
+        logger.error('TimeoutException:', e)
         sys.exit(1)
 
     finally:
@@ -53,18 +70,19 @@ def get_flights():
 
 def _get_flights(driver, prev_flights_table_id):
     while True:
-        flights_table = WebDriverWait(driver, timeout).until(
+        flights_table = WebDriverWait(driver, TIMEOUT).until(
             lambda d: d.find_element(By.CLASS_NAME, 'XClist'),
-            message='flights_table not found'
+            'flights_table not found'
         )
         if flights_table.id != prev_flights_table_id:
             break
         time.sleep(0.2)
-    flights_table_body = WebDriverWait(flights_table, timeout).until(
+
+    flights_table_body = WebDriverWait(flights_table, TIMEOUT).until(
         lambda t: t.find_element(By.TAG_NAME, 'tbody'),
         'flights_table_body not found'
     )
-    flights = WebDriverWait(flights_table_body, timeout).until(
+    flights = WebDriverWait(flights_table_body, TIMEOUT).until(
         lambda t: t.find_elements(By.TAG_NAME, 'tr'),
         'flights not found'
     )
@@ -72,7 +90,7 @@ def _get_flights(driver, prev_flights_table_id):
 
 
 def save_relevant_flights(flight, ranked_flights, rank):
-    cells = WebDriverWait(flight, timeout).until(
+    cells = WebDriverWait(flight, TIMEOUT).until(
         lambda f: f.find_elements(By.TAG_NAME, 'td'),
         'cells not found'
     )
@@ -92,6 +110,7 @@ def save_relevant_flights(flight, ranked_flights, rank):
         .find_element(By.CSS_SELECTOR, 'div:nth-child(1)')
         .get_attribute('title')
     )
+
     if (
             launch_site == take_off_site
             and pilot_name not in ranked_flights
@@ -111,18 +130,22 @@ def save_relevant_flights(flight, ranked_flights, rank):
 
 
 def get_participants():
-    # TODO: maybe change to txt file
+    # TODO: maybe get from `swissleague.ch`
     participants = set()
-    with open(f'data/{year}/participants/{event_id}.csv', newline='') as f:
+    with open(f'{DATA_DIR}/{year}/participants/{event_id}.csv', newline='') as f:
         reader = csv.reader(f)
         next(reader)
         for row in reader:
             participants.add(row[0])
+    if not participants:
+        # TODO: check and test error cases
+        logger.error('Participants not found')
+        sys.exit(1)
     return participants
 
 
 def get_max_list_id(driver):
-    xc_pager = WebDriverWait(driver, timeout).until(
+    xc_pager = WebDriverWait(driver, TIMEOUT).until(
         lambda d: d.find_element(By.CLASS_NAME, 'XCpager'),
         'XCpager not found'
     )
@@ -135,30 +158,35 @@ def get_max_list_id(driver):
 
 
 def export_flights(flights):
-    print('Exporting flights to CSV...')
+    logger.info('Exporting flights to CSV...')
     # create output folder if it doesn't exist
-    try:
-        os.makedirs(f'output/{year}')
-    except FileExistsError:
-        pass
+    output_path = f'{OUTPUT_DIR}/{year}'
+    os.makedirs(f'{output_path}', exist_ok=True)
 
-    with open(f'output/{year}/{date}_{take_off_site}.csv', 'w') as f:
-        f.write('Rank,Take off time,Pilot name,Take off site,Distance (km),Route Type,Points,Avg speed (km/h),Glider\n')
+    with open(f'{output_path}/{date}_{take_off_site}.csv', 'w', newline='') as f:
+        writer = csv.writer(f)
+        header = [
+            'Rank', 'Take off time', 'Pilot name', 'Take off site',
+            'Distance (km)', 'Route Type', 'Points', 'Avg speed (km/h)', 'Glider'
+        ]
+        writer.writerow(header)
         for pilot_name, flight in flights.items():
-            f.write(
-                f"{flight['rank']},{flight['take_off_time']},{pilot_name},{flight['distance']},{flight['route_type']},{flight['points']},{flight['avg_speed']},{flight['glider']}\n"
-            )
-    print('Export complete!')
+            writer.writerow([
+                flight['rank'], flight['take_off_time'], pilot_name,
+                take_off_site, flight['distance'], flight['route_type'],
+                flight['points'], flight['avg_speed'], flight['glider']
+            ])
+    logger.info('Export complete!')
 
 
 def get_date_and_take_off_site():
     # event_id in csv are integers from 1 to n
-    with open(f'data/{year}/events.csv', newline='') as f:
+    with open(f'{DATA_DIR}/{year}/events.csv', newline='') as f:
         reader = csv.reader(f)
         next(reader)
         for i, row in enumerate(reader):
             if i == event_id - 1:
-                print(f'Event found: {row[1]}, {row[2]}')
+                logger.info(f'Event found: {row[1]}, {row[2]}')
                 return row[1], row[2]
     return None, None
 
@@ -174,17 +202,15 @@ def args_parser():
 def main():
     args = args_parser()
     # save event_id as integer
-    global event_id
-    event_id = int(args.event_id)
+    global event_id, year, date, take_off_site
+    # TODO: maybe need to cast to int
+    event_id = args.event_id
     if args.year:
-        global year
         year = args.year
 
-    global date
-    global take_off_site
     date, take_off_site = get_date_and_take_off_site()
     if date is None or take_off_site is None:
-        print('Event not found')
+        logger.error('Event not found')
         sys.exit(1)
 
     flights = get_flights()
