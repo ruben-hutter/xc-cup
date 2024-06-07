@@ -30,7 +30,6 @@ def get_flights():
     '''
     global participants
     participants = get_participants()
-    #base_url = f'https://www.xcontest.org/switzerland/en/flights/daily-score-pg/#filter[date]={date}@filter[country]=CH@filter[detail_glider_catg]=FAI3'
     base_url = (
         f'https://www.xcontest.org/switzerland/en/flights/daily-score-pg/'
         f'#filter[date]={date}@filter[country]=CH@filter[detail_glider_catg]=FAI3'
@@ -130,17 +129,20 @@ def save_relevant_flights(flight, ranked_flights, rank):
 
 
 def get_participants():
-    # TODO: maybe get from `swissleague.ch`
+    # TODO: maybe get participants from `swissleague.ch`
     participants = set()
-    with open(f'{DATA_DIR}/{year}/participants/{event_id}.csv', newline='') as f:
-        reader = csv.reader(f)
-        next(reader)
-        for row in reader:
-            participants.add(row[0])
-    if not participants:
-        # TODO: check and test error cases
-        logger.error('Participants not found')
+
+    try:
+        with open(f'{DATA_DIR}/{year}/participants/{event_id}.csv', newline='') as f:
+            reader = csv.reader(f)
+            next(reader)
+            for row in reader:
+                participants.add(row[0])
+
+    except FileNotFoundError:
+        logger.error('Participants list not found')
         sys.exit(1)
+
     return participants
 
 
