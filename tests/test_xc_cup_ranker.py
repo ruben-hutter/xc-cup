@@ -24,21 +24,26 @@ def test_get_participants_valid():
     assert "Ruben Hutter" in participants
 
 
-@patch.object(xc_cup_ranker, 'event_id', 2)
+@patch.object(xc_cup_ranker, 'event_id', -1)
 @patch.object(xc_cup_ranker, 'year', 2024)
 def test_get_participants_event_id_invalid():
-    participants = xc_cup_ranker.get_participants()
-    # TODO: check if program exits and logs error
+    with patch('sys.exit') as mock_exit:
+        xc_cup_ranker.get_participants()
+        mock_exit.assert_called_once()
 
 
 @patch.object(xc_cup_ranker, 'event_id', 1)
 @patch.object(xc_cup_ranker, 'year', 2023)
 def test_get_participants_year_invalid():
-    participants = xc_cup_ranker.get_participants()
-    # TODO: check if program exits and logs error
+    with patch('sys.exit') as mock_exit:
+        xc_cup_ranker.get_participants()
+        mock_exit.assert_called_once()
 
 
+@patch.object(xc_cup_ranker, 'event_id', 2)
+@patch.object(xc_cup_ranker, 'year', 2024)
 def test_get_participants_list_empty():
-    # TODO: mock existance of empty file
-    participants = xc_cup_ranker.get_participants()
-    # TODO: check if program exits and logs error
+    with patch('sys.exit') as mock_exit:
+        participants = xc_cup_ranker.get_participants()
+        assert len(participants) == 0
+        mock_exit.assert_called_once()

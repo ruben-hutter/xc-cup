@@ -30,6 +30,9 @@ def get_flights():
     '''
     global participants
     participants = get_participants()
+    if not participants:
+        logger.error('No participants found for event')
+        sys.exit(1)
     base_url = (
         f'https://www.xcontest.org/switzerland/en/flights/daily-score-pg/'
         f'#filter[date]={date}@filter[country]=CH@filter[detail_glider_catg]=FAI3'
