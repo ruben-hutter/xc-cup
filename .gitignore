@@ -1,5 +1,6 @@
 # Additional ignores
 output/
+.venv/
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,jetbrains
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,jetbrains
