@@ -34,7 +34,9 @@ def get_flights():
         logger.error("No participants found for event")
         sys.exit(1)
     base_url = (
-        f"https://www.xcontest.org/switzerland/en/flights/daily-score-pg/"
+        f"https://www.xcontest.org/"
+        f"{f'{year}/' if year != datetime.datetime.now().year else ''}"
+        f"switzerland/en/flights/daily-score-pg/"
         f"#filter[date]={date}@filter[country]=CH@filter[detail_glider_catg]=FAI3"
     )
 
@@ -136,6 +138,7 @@ def get_participants():
 
     try:
         with participants_file.open(newline="") as f:
+            logger.debug(f"Reading participants from {participants_file}")
             reader = csv.reader(f)
             next(reader)
             for row in reader:
