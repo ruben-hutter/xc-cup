@@ -57,8 +57,8 @@ def test_get_participants_year_invalid():
 @patch.object(xc_cup_ranker, "event_id", 2)
 @patch.object(xc_cup_ranker, "year", 2024)
 def test_get_participants_list_empty():
-    with patch("sys.exit") as mock_exit:
-        participants = xc_cup_ranker.get_participants()
-        assert len(participants) == 0
-        mock_exit.assert_called_once()
+    with pytest.raises(SystemExit) as exit_info:
+        xc_cup_ranker.get_participants()
+
+    assert exit_info.value.code == 1
 
