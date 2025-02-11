@@ -29,6 +29,7 @@ def get_flights():
     Fetches flights from XContest and returns a dictionary of relevant flights
     """
     global participants
+
     participants = get_participants()
     if not participants:
         logger.error("No participants found for event")

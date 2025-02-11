@@ -1,3 +1,4 @@
+import pytest
 from pathlib import Path
 from unittest.mock import patch
 
@@ -5,7 +6,12 @@ import xc_cup_ranker
 
 TEST_DATA_DIR = Path(__file__).parent / "data"
 
-@patch.object(xc_cup_ranker, "DATA_DIR", TEST_DATA_DIR)
+@pytest.fixture(autouse=True)
+def patch_data_dir():
+    with patch.object(xc_cup_ranker, "DATA_DIR", TEST_DATA_DIR):
+        yield
+
+
 @patch.object(xc_cup_ranker, "event_id", 1)
 @patch.object(xc_cup_ranker, "year", 2024)
 def test_get_date_and_take_off_site_valid():
@@ -14,7 +20,6 @@ def test_get_date_and_take_off_site_valid():
     assert take_off_site == "Monte Tamaro"
 
 
-@patch.object(xc_cup_ranker, "DATA_DIR", TEST_DATA_DIR)
 @patch.object(xc_cup_ranker, "event_id", 0)
 @patch.object(xc_cup_ranker, "year", 2024)
 def test_get_date_and_take_off_site_invalid():
@@ -23,7 +28,6 @@ def test_get_date_and_take_off_site_invalid():
     assert take_off_site is None
 
 
-@patch.object(xc_cup_ranker, "DATA_DIR", TEST_DATA_DIR)
 @patch.object(xc_cup_ranker, "event_id", 1)
 @patch.object(xc_cup_ranker, "year", 2024)
 def test_get_participants_valid():
