@@ -136,17 +136,14 @@ def get_participants():
     participants = set()
     participants_file = DATA_DIR / str(year) / "participants" / f"{event_id}.csv"
 
-    try:
-        with participants_file.open(newline="") as f:
-            logger.debug(f"Reading participants from {participants_file}")
-            reader = csv.reader(f)
-            next(reader)
-            for row in reader:
-                participants.add(row[0])
+    check_file_exists_and_not_empty(participants_file)
 
-    except FileNotFoundError:
-        logger.error("Participants list not found")
-        sys.exit(1)
+    with participants_file.open(newline="") as f:
+        logger.debug(f"Reading participants from {participants_file}")
+        reader = csv.reader(f)
+        next(reader)
+        for row in reader:
+            participants.add(row[0])
 
     return participants
 
@@ -190,6 +187,9 @@ def export_flights(flights):
 def get_date_and_take_off_site():
     # event_id in csv are integers from 1 to n
     events_file = DATA_DIR / str(year) / "events.csv"
+
+    check_file_exists_and_not_empty(events_file)
+
     with events_file.open(newline="") as f:
         reader = csv.reader(f)
         next(reader)
@@ -197,24 +197,36 @@ def get_date_and_take_off_site():
             if i == event_id - 1:
                 logger.info(f"Event found: {row[1]}, {row[2]}")
                 return row[1], row[2]
+
     return None, None
+
+def check_file_exists_and_not_empty(file_path):
+    if not file_path.exists():
+        logger.error(f"File not found: {file_path}")
+        sys.exit(1)
+
+    if file_path.stat().st_size == 0:
+        logger.error(f"File is empty: {file_path}")
+        sys.exit(1)
 
 
 def args_parser():
-    parser = argparse.ArgumentParser(description="Scrape XContest for flights")
-    parser.add_argument("event_id", type=int, help="Event ID")
-    parser.add_argument("--year", type=int, help="Year")
+    parser = argparse.ArgumentParser(description="Create XC Cup ranking for an event")
+    parser.add_argument("event_id", type=int, help="event id as in events.csv")
+    parser.add_argument("-y", "--year", type=int, help="year")
     args = parser.parse_args()
     return args
 
 
 def main():
-    args = args_parser()
-    # save event_id as integer
     global event_id, year, date, take_off_site
-    # TODO: maybe need to cast to int
+
+    args = args_parser()
     event_id = args.event_id
     if args.year:
+        if args.year < 2024 or args.year > datetime.datetime.now().year:
+            logger.error("Invalid year")
+            sys.exit(1)
         year = args.year
 
     date, take_off_site = get_date_and_take_off_site()
@@ -229,3 +241,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
