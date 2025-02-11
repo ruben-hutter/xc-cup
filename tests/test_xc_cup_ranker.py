@@ -39,17 +39,19 @@ def test_get_participants_valid():
 @patch.object(xc_cup_ranker, "event_id", -1)
 @patch.object(xc_cup_ranker, "year", 2024)
 def test_get_participants_event_id_invalid():
-    with patch("sys.exit") as mock_exit:
+    with pytest.raises(SystemExit) as exit_info:
         xc_cup_ranker.get_participants()
-        mock_exit.assert_called_once()
+
+    assert exit_info.value.code == 1
 
 
 @patch.object(xc_cup_ranker, "event_id", 1)
 @patch.object(xc_cup_ranker, "year", 2023)
 def test_get_participants_year_invalid():
-    with patch("sys.exit") as mock_exit:
+    with pytest.raises(SystemExit) as exit_info:
         xc_cup_ranker.get_participants()
-        mock_exit.assert_called_once()
+
+    assert exit_info.value.code == 1
 
 
 @patch.object(xc_cup_ranker, "event_id", 2)
