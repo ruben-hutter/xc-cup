@@ -163,7 +163,12 @@ def get_max_list_id(driver):
 
 
 def export_flights(flights):
+    global take_off_site
+
     logger.info("Exporting flights to CSV...")
+    assert take_off_site is not None
+    take_off_site = take_off_site.replace(" ", "_").lower()
+
     # create output folder if it doesn't exist
     output_path = OUTPUT_DIR / str(year)
     output_path.mkdir(parents=True, exist_ok=True)
@@ -211,19 +216,39 @@ def check_file_exists_and_not_empty(file_path):
         sys.exit(1)
 
 
+def export_to_pdf():
+    logger.info("Exporting to PDF...")
+    output_path = OUTPUT_DIR / str(year)
+    pdf_file = output_path / f"{date}_{take_off_site}.pdf"
+    csv_file = output_path / f"{date}_{take_off_site}.csv"
+
+    if not csv_file.exists():
+        logger.error(f"CSV file not found: {csv_file}")
+        sys.exit(1)
+
+    # TODO: logic to convert CSV to PDF
+    logger.info(f"PDF file saved to {pdf_file}")
+
+
 def args_parser():
     parser = argparse.ArgumentParser(description="Create XC Cup ranking for an event")
     parser.add_argument("event_id", type=int, help="event id as in events.csv")
     parser.add_argument("-y", "--year", type=int, help="year")
-    args = parser.parse_args()
-    return args
+    parser.add_argument("-v", "--verbose", action="store_true", help="enable verbose mode")
+    parser.add_argument("--pdf", action="store_true", help="export to PDF")
+    return parser.parse_args()
 
 
 def main():
     global event_id, year, date, take_off_site
 
     args = args_parser()
+
+    if args.verbose:
+        logger.setLevel(logging.DEBUG)
+
     event_id = args.event_id
+
     if args.year:
         if args.year < 2024 or args.year > datetime.datetime.now().year:
             logger.error("Invalid year")
@@ -237,7 +262,8 @@ def main():
 
     flights = get_flights()
     export_flights(flights)
-    # TODO: create nice pdf with the data
+    if args.pdf:
+        export_to_pdf()
 
 
 if __name__ == "__main__":
