@@ -38,39 +38,41 @@ cd xc-cup-ranker
 
 2. Install the required packages:
 
-    a) Using conda:
+    a) Using **Conda**:
 
     ```bash
     conda create -n xc-cup-env --file package-list.txt
     ```
 
-    b) Using pip:
+    b) Using **virtualenv** (recommended for non-Conda users):
 
     ```bash
+    python -m venv .venv
+    source .venv/bin/activate   # Linux/macOS
+    .venv\Scripts\activate.bat  # Windows (CMD)
     pip install -r requirements.txt
     ```
 
 3. Run the script:
 
-    a) Run `run.sh`:
+    a) Using the **run script**:
 
     ```bash
-    ./run.sh <event_id> [--year <year>]
+    ./run.sh <event_id> [--year <year>] # Linux/macOS
+    run.bat <event_id> [--year <year]   # Windows (CMD)
+    run.ps1 <event_id> [--year <year]   # Windows (PowerShell)
     ```
 
-    b) With conda:
+    This script will automatically detect and use an active virtual environment (`.venv`), Conda environment (`xc-cup-env`), or fallback to system Python.
+
+    b) Running manually:
+
     ```bash
-    conda run -n xc-cup-env python xc_cup_ranker.py <event_id> [--year <year>]
+    conda run -n xc-cup-env python xc_cup_ranker.py <event_id> [--year <year>]  # Conda
+    python xc_cup_ranker.py <event_id> [--year <year>]  # virtualenv
     ```
 
-    c) Without conda:
-    ```bash
-    python xc_cup_ranker.py <event_id> [--year <year>]
-    ```
-
-Replace `<event_id>` with the ID of the event you want to rank.
-Optionally, you can specify the year of the event as well, e.g. `2024`. The
-default year is the current year.
+Replace `<event_id>` with the event you want to rank. The optional `--year` parameter defaults to the current year.
 
 ## Contributing
 
@@ -85,3 +87,4 @@ Contributions are welcome! Follow these steps to contribute to the project:
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
