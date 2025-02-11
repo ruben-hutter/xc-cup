@@ -14,6 +14,7 @@ def test_get_date_and_take_off_site_valid():
     assert take_off_site == "Monte Tamaro"
 
 
+@patch.object(xc_cup_ranker, "DATA_DIR", TEST_DATA_DIR)
 @patch.object(xc_cup_ranker, "event_id", 0)
 @patch.object(xc_cup_ranker, "year", 2024)
 def test_get_date_and_take_off_site_invalid():
