@@ -10,6 +10,9 @@ TEST_DATA_DIR = Path(__file__).parent / "data"
 
 @pytest.fixture(autouse=True)
 def patch_data_dir():
+    patched_dir = TEST_DATA_DIR.resolve()
+    print(f"Using data directory: {patched_dir}")
+
     with patch("xc_cup_ranker.config.DATA_DIR", TEST_DATA_DIR):
         yield
 
