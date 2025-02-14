@@ -1,8 +1,11 @@
 from pathlib import Path
 
 import pytest
+import importlib
 
 import xc_cup_ranker.config
+import xc_cup_ranker.events
+import xc_cup_ranker.participants
 from xc_cup_ranker.events import get_date_and_take_off_site
 from xc_cup_ranker.participants import get_participants
 
@@ -17,6 +20,9 @@ def patch_data_dir(monkeypatch):
     assert hasattr(xc_cup_ranker.config, "DATA_DIR"), "DATA_DIR not found in config!"
 
     monkeypatch.setattr(xc_cup_ranker.config, "DATA_DIR", patched_dir)
+
+    importlib.reload(xc_cup_ranker.events)
+    importlib.reload(xc_cup_ranker.participants)
 
     yield
 
