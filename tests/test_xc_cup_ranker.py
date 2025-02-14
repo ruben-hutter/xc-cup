@@ -1,7 +1,8 @@
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
+
+import xc_cup_ranker.config
 from xc_cup_ranker.events import get_date_and_take_off_site
 from xc_cup_ranker.participants import get_participants
 
@@ -10,10 +11,12 @@ TEST_DATA_DIR = Path(__file__).parent / "data"
 
 @pytest.fixture(autouse=True)
 def patch_data_dir(monkeypatch):
+    """Ensure `DATA_DIR` is patched before tests run."""
     patched_dir = TEST_DATA_DIR.resolve()
-    print(f"Using TEST_DATA_DIR: {patched_dir}")
 
-    monkeypatch.setattr("xc_cup_ranker.config", "DATA_DIR", patched_dir)
+    assert hasattr(xc_cup_ranker.config, "DATA_DIR"), "DATA_DIR not found in config!"
+
+    monkeypatch.setattr(xc_cup_ranker.config, "DATA_DIR", patched_dir)
 
     yield
 
