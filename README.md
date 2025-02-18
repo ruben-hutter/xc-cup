@@ -44,7 +44,7 @@ Follow these instructions to set up and run the XC-Cup Ranker locally.
 3. Install dependencies:
 
    ```bash
-   uv pip sync
+   uv sync
    ```
 
 #### Using `virtualenv` (Manual Setup)
